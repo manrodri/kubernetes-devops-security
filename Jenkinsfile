@@ -29,7 +29,13 @@ pipeline {
               pitmutation mutationStatsFile: '**/target/pit-reports/**/mutations.xml'
             }
           }
-       }  
+       }
+
+       stage("SonarQ analysis")  {
+        steps {
+          sh "mvn sonar:sonar -Dsonar.projectKey=numeric-application -Dsonar.host.url=http://jenkins.manrodri.com:9000 -Dsonar.login=f9e10636759f89c4c980dace0f3c921f6eaf2d3f"
+        }
+       }
 
       stage("Docker build and push") {
         steps {

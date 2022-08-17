@@ -18,6 +18,14 @@ pipeline {
                 jacoco execPattern: 'target/jacoco.exec'
               }
             }
-        }   
+        }  
+      stage("Docker build and push") {
+        steps {
+         
+            sh 'docker build -t manrodri/numeric-app:""$GIT_COMMIT"" .'
+            sh 'docker push manrodri/numeric-app:""$GIT_COMMIT""'
+          
+        }
+      }
     }
 }

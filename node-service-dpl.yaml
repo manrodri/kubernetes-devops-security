@@ -1,0 +1,34 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: node-service
+  name: node-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: node-service
+  strategy: {}
+  template:
+    metadata:
+      labels:
+        app: node-service
+    spec:
+      containers:
+      - image: siddharth67/node-service:v1
+        name: node-service
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: node-service
+  name: node-service
+spec:
+  ports:
+  - port: 5000
+    protocol: TCP
+    targetPort: 5000
+  selector:
+    app: node-service

@@ -34,7 +34,9 @@ pipeline {
        stage("SonarQ analysis")  {
         steps {
           withSonarQubeEnv('sonarq'){
-          sh "mvn sonar:sonar -Dsonar.projectKey=numeric-application -Dsonar.host.url=http://jenkins.manrodri.com:9000 -Dsonar.login=f9e10636759f89c4c980dace0f3c921f6eaf2d3f"
+          sh "mvn sonar:sonar \
+           -Dsonar.projectKey=numeric-application \
+           -Dsonar.host.url=http://jenkins.manrodri.com:9000"
           }
           timeout(time: 2, unit: 'MINUTES'){
             script {

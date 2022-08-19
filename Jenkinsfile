@@ -8,28 +8,28 @@ pipeline {
               archive 'target/*.jar'
             }
         }
-      // stage('Unit Test') {
-      //       steps {
-      //         sh "mvn test"
-      //       }
-      //       post {
-      //         always {
-      //           junit 'target/surefire-reports/*.xml'
-      //           jacoco execPattern: 'target/jacoco.exec'
-      //         }
-      //       }
-      //   }
+      stage('Unit Test') {
+            steps {
+              sh "mvn test"
+            }
+            post {
+              always {
+                junit 'target/surefire-reports/*.xml'
+                jacoco execPattern: 'target/jacoco.exec'
+              }
+            }
+        }
 
-      //  stage('Mutation Tests - PIT') {
-      //     steps {
-      //       sh "mvn org.pitest:pitest-maven:mutationCoverage"
-      //     }
-      //     post {
-      //       always {
-      //         pitmutation mutationStatsFile: '**/target/pit-reports/**/mutations.xml'
-      //       }
-      //     }
-      //  }
+       stage('Mutation Tests - PIT') {
+          steps {
+            sh "mvn org.pitest:pitest-maven:mutationCoverage"
+          }
+          post {
+            always {
+              pitmutation mutationStatsFile: '**/target/pit-reports/**/mutations.xml'
+            }
+          }
+       }
 
        stage("SonarQ analysis")  {
         steps {

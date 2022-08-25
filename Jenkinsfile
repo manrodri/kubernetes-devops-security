@@ -1,6 +1,15 @@
 pipeline {
   agent any
 
+  environment {
+    deploymentName = "devsecops"
+    containerName = "devsecops-container"
+    serviceName = "devsecops-svc"
+    imageName = "manrodri/numeric-app:${GIT_COMMIT}"
+    applicationURL = "http://jenkins.manrodri.com/"
+    applicationURI = "/increment/99"
+  }
+
   stages {
       stage('Build Artifact') {
             steps {
@@ -70,6 +79,18 @@ pipeline {
     }
 
       stage('Kubernetes Deployment - DEV'){
+        parallel(
+          "Deployment": {
+            withKubeConfig([credentialsId: 'k8s-config']){
+              sh "bash k8s-deployment.sh"
+            }
+          },
+          "Rollout status": {
+            withKubeConfig([credentialsId: 'k8s-config']){
+              sh "bash k8s-deployment-rollout-status.sh"
+            }
+          }
+        )
         steps{
           withKubeConfig([credentialsId: 'k8s-config']) {
             sh "sed -i 's#replace#manrodri/numeric-app:${GIT_COMMIT}#g' k8s_deployment_service.yaml"

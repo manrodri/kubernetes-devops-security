@@ -17,19 +17,19 @@ pipeline {
               archive 'target/*.jar'
             }
         }
-      stage('Unit Test') {
-            steps {
-              sh "mvn test"
-            }
+      // stage('Unit Test') {
+      //       steps {
+      //         sh "mvn test"
+      //       }
             
-        }
+      //   }
 
-       stage('Mutation Tests - PIT') {
-          steps {
-            sh "mvn org.pitest:pitest-maven:mutationCoverage"
-          }
+      //  stage('Mutation Tests - PIT') {
+      //     steps {
+      //       sh "mvn org.pitest:pitest-maven:mutationCoverage"
+      //     }
           
-       }
+      //  }
 
        stage("SonarQ analysis")  {
         steps {

@@ -106,6 +106,12 @@ pipeline {
         }
       }
     }
+
+    stage("Integration tests"){
+      steps {
+        sh "echo foo"
+      }
+    }
     post {
       always {
                 junit 'target/surefire-reports/*.xml'

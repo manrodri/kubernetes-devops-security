@@ -106,32 +106,12 @@ pipeline {
         }
       }
     }
-
-    stage('Integration tests - DEV'){
-      steps{
-        script {
-          try {
-            withKubeConfig([credentialsId: 'k8s-config']){
-                        sh "bash integration-tests.sh"
-                      }
-          } catch(e){
-              withKubeConfig([credentialsId: 'k8s-config']){
-                        sh "kubectl -n default rollout undo deploy ${deploymentName}"
-                      }
-          }
-          throw e
-        }
-      }
-    }
-
-    
     post {
       always {
                 junit 'target/surefire-reports/*.xml'
                 jacoco execPattern: 'target/jacoco.exec'
                 pitmutation mutationStatsFile: '**/target/pit-reports/**/mutations.xml'
                 dependencyCheckPublisher pattern: 'target/dependency-check-report.xml'
-                publishHTML([allowMissing: false, alwaysLinkToLastBuild: true, keepAll: true, reportDir: 'owasp-zap-report', reportFiles: 'zap_report.html', reportName: 'OWASP_ZAP_HTML report', reportTitles: 'OWASP_ZAP_HTML report'])
       }
       // success {
 
@@ -141,4 +121,3 @@ pipeline {
       // }
     }
 }
-

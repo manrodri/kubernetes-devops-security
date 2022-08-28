@@ -10,7 +10,7 @@ PORT=$(kubectl -n default get svc ${serviceName} -o json | jq .spec.ports[].node
 echo "PORT: ${PORT}"
 echo "applicationURL: ${applicationURL}"
 echo "applicationURI: ${applicationURI}"
-echo $applicationURL:$PORT/$applicationURI
+echo $applicationURL:$PORT$applicationURI
 
 if [[ ! -z "$PORT" ]];
 then
@@ -23,7 +23,6 @@ then
             echo "Increment Test Passed"
         else
             echo "Increment Test Failed"
-            exit 1;
     fi;
 
     if [[ "$http_code" == 200 ]];
@@ -31,8 +30,15 @@ then
             echo "HTTP Status Code Test Passed"
         else
             echo "HTTP Status code is not 200"
-            exit 1;
     fi;
+
+    if [[ "$response" == 100 && "$http_code" == 200 ]];
+        then
+        echo "All tests passed"
+        exit 0;
+    else
+        echo "Integration tests failed"
+        exit 1;
 
 else
         echo "The Service does not have a NodePort"

@@ -35,7 +35,7 @@ then
     if [[ "$response" == 100 && "$http_code" == 200 ]];
         then
         echo "All tests passed"
-        exit 0;
+        
     else
         echo "Integration tests failed"
         exit 1;

@@ -111,7 +111,7 @@ pipeline {
         script {
           try {
             withKubeConfig([credentialsId: 'k8s-config']) {
-              sh "bash integration-test.sh"
+              sh "bash integration-tests.sh"
             }
           } catch (e) {
             withKubeConfig([credentialsId: 'k8s-config']) {

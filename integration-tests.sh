@@ -39,6 +39,7 @@ then
     else
         echo "Integration tests failed"
         exit 1;
+    fi
 
 else
         echo "The Service does not have a NodePort"

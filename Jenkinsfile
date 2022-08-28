@@ -8,7 +8,7 @@ pipeline {
     imageName = "manrodri/numeric-app:${GIT_COMMIT}"
     applicationURL = "http://jenkins.manrodri.com"
     applicationURI = "/increment/99"
-    
+
   }
 
   stages {
@@ -106,19 +106,19 @@ pipeline {
                   )
         }
       }
-      stage("Integration tests"){
-      steps{
+      stage('Integration Tests - DEV') {
+      steps {
         script {
           try {
-            withKubeConfig([credentialsId: 'k8s-config']){
-                        sh "bash integration-tests.sh"
-                      }
-          } catch(e){
-              withKubeConfig([credentialsId: 'k8s-config']){
-                        sh "kubectl -n default rollout undo deploy ${deploymentName}"
-                      }
+            withKubeConfig([credentialsId: 'k8s-config']) {
+              sh "bash integration-test.sh"
+            }
+          } catch (e) {
+            withKubeConfig([credentialsId: 'k8s-config']) {
+              sh "kubectl -n default rollout undo deploy ${deploymentName}"
+            }
+            throw e
           }
-          throw e
         }
       }
     }

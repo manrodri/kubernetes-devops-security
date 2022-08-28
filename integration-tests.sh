@@ -1,4 +1,3 @@
-################################## integration-test.sh ################################## 
 #!/bin/bash
 
 #integration-test.sh
@@ -7,10 +6,8 @@ sleep 5s
 
 PORT=$(kubectl -n default get svc ${serviceName} -o json | jq .spec.ports[].nodePort)
 
-echo "PORT: ${PORT}"
-echo "applicationURL: ${applicationURL}"
-echo "applicationURI: ${applicationURI}"
-echo $applicationURL:$PORT$applicationURI
+echo $PORT
+echo $applicationURL:$PORT/$applicationURI
 
 if [[ ! -z "$PORT" ]];
 then
@@ -23,6 +20,7 @@ then
             echo "Increment Test Passed"
         else
             echo "Increment Test Failed"
+            exit 1;
     fi;
 
     if [[ "$http_code" == 200 ]];
@@ -30,20 +28,10 @@ then
             echo "HTTP Status Code Test Passed"
         else
             echo "HTTP Status code is not 200"
+            exit 1;
     fi;
-
-    if [[ "$response" == 100 && "$http_code" == 200 ]];
-        then
-        echo "All tests passed"
-        
-    else
-        echo "Integration tests failed"
-        exit 1;
-    fi
 
 else
         echo "The Service does not have a NodePort"
         exit 1;
 fi;
-
-################################## integration-test.sh ################################## 

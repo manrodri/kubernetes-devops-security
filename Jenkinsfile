@@ -72,22 +72,22 @@ pipeline {
         }
       }
 
-    stage('Vulnerability Scan - Kubernetes') {
-      steps {
-        parallel(
-          "Opa Scan": {
-            sh 'docker run --rm -v $(pwd):/project openpolicyagent/conftest test --policy opa-k8s-security.rego k8s_deployment_service.yaml'
-          },
-          "Kubesec Scan": {
-            sh 'bash kubesec-scan.sh'
-          },
-          "Trivy Scan": {
-            sh "bash trivy-k8s-scan.sh"
-          }
-        )
-        
+      stage('Vulnerability Scan - Kubernetes') {
+        steps {
+          parallel(
+            "Opa Scan": {
+              sh 'docker run --rm -v $(pwd):/project openpolicyagent/conftest test --policy opa-k8s-security.rego k8s_deployment_service.yaml'
+            },
+            "Kubesec Scan": {
+              sh 'bash kubesec-scan.sh'
+            },
+            "Trivy Scan": {
+              sh "bash trivy-k8s-scan.sh"
+            }
+          )
+          
+        }
       }
-    }
 
       stage('Kubernetes Deployment - DEV'){
         steps {
@@ -105,13 +105,34 @@ pipeline {
                   )
         }
       }
-    }
-
-    stage("Integration tests"){
-      steps {
-        sh "echo foo"
+      stage("Integration tests"){
+      steps{
+        script {
+          try {
+            withKubeConfig([credentialsId: 'k8s-config']){
+                        sh "bash integration-tests.sh"
+                      }
+          } catch(e){
+              withKubeConfig([credentialsId: 'k8s-config']){
+                        sh "kubectl -n default rollout undo deploy ${deploymentName}"
+                      }
+          }
+          throw e
+        }
       }
     }
+
+      stage("OWASP ZAP analysis"){
+        steps {
+          withKubeConfig([credentialsId: 'k8s-config']){
+            sh 'bash zap.sh'
+          }
+        }
+      }
+
+    }
+
+    
     post {
       always {
                 junit 'target/surefire-reports/*.xml'

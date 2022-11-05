@@ -16,8 +16,8 @@ spec:
         app: node-service
     spec:
       containers:
-      - image: siddharth67/node-service:v1
-        name: node-service
+        - image: siddharth67/node-service:v1
+          name: node-service
 ---
 apiVersion: v1
 kind: Service
@@ -27,8 +27,8 @@ metadata:
   name: node-service
 spec:
   ports:
-  - port: 5000
-    protocol: TCP
-    targetPort: 5000
+    - port: 5000
+      protocol: TCP
+      targetPort: 5000
   selector:
     app: node-service

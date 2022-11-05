@@ -1,7 +1,7 @@
 name: CI
 on:
   pull_request:
-    branches: 
+    branches:
       - release/*
       - main
     types:
@@ -10,7 +10,7 @@ on:
       - edited
       - synchronized
   push:
-    branches: 
+    branches:
       - release/*
       - main
       - feature/*
@@ -41,13 +41,13 @@ jobs:
         with:
           name: test-report
           path: ./target/surefire-reports/*.xml # or path/to/artifact
-      
+
       - name: upload main Artifact
-        uses: actions/upload-artifact@v3    
+        uses: actions/upload-artifact@v3
         with:
           name: test-report
           path: target/*.jar # or path/to/artifact
-      
+
       # Docker buld and push
       - name: Login to Docker Hub
         uses: docker/login-action@v2
@@ -64,5 +64,3 @@ jobs:
           file: ./Dockerfile
           push: true
           tags: ${{ secrets.DOCKER_HUB_USERNAME }}/numeric-app:$
-      
-        

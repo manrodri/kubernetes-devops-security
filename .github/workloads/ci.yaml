@@ -64,6 +64,6 @@ jobs:
           context: .
           file: ./Dockerfile
           push: true
-          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/numeric-app:$GITHUB_SHA
+          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/numeric-app:$
       
         

@@ -1,0 +1,24 @@
+{
+  "name": "kubernetes-devops-security",
+  "version": "1.0.0",
+  "description": "## Fork and Clone this Repo",
+  "main": "index.js",
+  "scripts": {
+    "format:check": "prettier --check \"**/*.{js,jsx,yml,yaml,json,css,scss,md,java}\"",
+    "format": "prettier --write \"**/*.{js,jsx,yml,yaml,json,css,scss,md,java}\""
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/manrodri/kubernetes-devops-security.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/manrodri/kubernetes-devops-security/issues"
+  },
+  "homepage": "https://github.com/manrodri/kubernetes-devops-security#readme",
+  "devDependencies": {
+    "prettier": "2.7.1",
+    "prettier-plugin-java": "^1.6.2"
+  }
+}

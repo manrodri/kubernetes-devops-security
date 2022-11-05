@@ -1,3 +1,8 @@
 {
+<<<<<<< HEAD
     "java.configuration.updateBuildConfiguration": "disabled"
 }
+=======
+  "java.configuration.updateBuildConfiguration": "automatic"
+}
+>>>>>>> feature/test-ci

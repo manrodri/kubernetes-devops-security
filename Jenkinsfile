@@ -12,189 +12,45 @@ pipeline {
   }
 
   stages {
-      stage('Build Artifact') {
-            steps {
-              sh "mvn clean package -DskipTests=true"
-              archive 'target/*.jar'
-            }
-        }
-      stage('Unit Test') {
-            steps {
-              sh "mvn test"
-            }
-            
-        }
 
-       stage('Mutation Tests - PIT') {
-          steps {
-            sh "mvn org.pitest:pitest-maven:mutationCoverage"
-          }
-          
-       }
-
-       stage("SonarQ analysis")  {
-        steps {
-          withSonarQubeEnv('sonarq'){
-          sh "mvn sonar:sonar \
-           -Dsonar.projectKey=numeric-application \
-           -Dsonar.host.url=http://jenkins.manrodri.com:9000"
-          }
-          timeout(time: 2, unit: 'MINUTES'){
-            script {
-              waitForQualityGate abortPipeline: true
-            }
-          }
-        }
-       }
-
-      stage("Vulnerability scan - Docker image"){
-
-        steps {
-          parallel(
-            "Dependency scan" : {
-              sh "mvn dependency-check:check"
-            },
-            "Trivy scan": {
-                sh "bash trivi-docker-image-scan.sh"
-            },
-            "OPA Conftest": {
-            sh 'docker run --rm -v $(pwd):/project openpolicyagent/conftest test --policy opa-docker-security.rego Dockerfile'
-          }
-          )
-        }
-      }
-
-      stage("Docker build and push") {
-        steps {
-          withDockerRegistry([credentialsId: "docker-hub", url: ""]){
-            sh 'sudo docker build -t manrodri/numeric-app:""$GIT_COMMIT"" .'
-            sh 'docker push manrodri/numeric-app:""$GIT_COMMIT""'
-          }
-        }
-      }
-
-      stage('Vulnerability Scan - Kubernetes') {
-        steps {
-          parallel(
-            "Opa Scan": {
-              sh 'docker run --rm -v $(pwd):/project openpolicyagent/conftest test --policy opa-k8s-security.rego k8s_deployment_service.yaml'
-            },
-            "Kubesec Scan": {
-              sh 'bash kubesec-scan.sh'
-            },
-            "Trivy Scan": {
-              sh "bash trivy-k8s-scan.sh"
-            }
-          )
-          
-        }
-      }
-
-      stage('Kubernetes Deployment - DEV'){
-        steps {
-          parallel(
-                    "Deployment": {
-                      withKubeConfig([credentialsId: 'k8s-config']){
-                        sh "bash k8s-deployment.sh"
-                      }
-                    },
-                    "Rollout status": {
-                      withKubeConfig([credentialsId: 'k8s-config']){
-                        sh "bash k8s-deployment-rollout-status.sh"
-                      }
-                    }
-                  )
-        }
-      }
-      stage('Integration Tests - DEV') {
+    stage('Build Artifact - Maven') {
       steps {
-        script {
-          try {
-            withKubeConfig([credentialsId: 'k8s-config']) {
-              sh "bash integration-tests.sh"
-            }
-          } catch (e) {
-            withKubeConfig([credentialsId: 'k8s-config']) {
-              sh "kubectl -n default rollout undo deploy ${deploymentName}"
-            }
-            throw e
-          }
+        sh "mvn clean package -DskipTests=true"
+        archive 'target/*.jar'
+      }
+    }
+
+    stage('Unit Tests - JUnit and JaCoCo') {
+      steps {
+        sh "mvn test"
+      }
+      post {
+        always {
+          junit 'target/surefire-reports/*.xml'
+          jacoco execPattern: 'target/jacoco.exec'
         }
       }
     }
 
-      stage("OWASP ZAP analysis"){
-        steps {
-          withKubeConfig([credentialsId: 'k8s-config']){
-            sh 'bash zap.sh'
-          }
-        }
-      }
-
-      stage('Prompte to PROD?') {
+    stage('Docker Build and Push') {
       steps {
-        timeout(time: 10, unit: 'MINUTES') {
-          input 'Do you want to Approve the Deployment to Production Environment/Namespace?'
+        withDockerRegistry([credentialsId: "docker-hub", url: ""]) {
+          sh 'printenv'
+          sh 'docker build -t siddharth67/numeric-app:""$GIT_COMMIT"" .'
+          sh 'docker push siddharth67/numeric-app:""$GIT_COMMIT""'
         }
       }
     }
 
+    stage('Kubernetes Deployment - DEV') {
+      steps {
+        withKubeConfig([credentialsId: 'kubeconfig']) {
+          sh "sed -i 's#replace#siddharth67/numeric-app:${GIT_COMMIT}#g' k8s_deployment_service.yaml"
+          sh "kubectl apply -f k8s_deployment_service.yaml"
+        }
+      }
+    }
     
-    stage('K8S CIS Benchmark') {
-      steps {
-        script {
+  }
 
-          parallel(
-            "Master": {
-              sh "bash cis-master.sh"
-            },
-            "Etcd": {
-              sh "bash cis-etcd.sh"
-            },
-            "Kubelet": {
-              sh "bash cis-kubelet.sh"
-            }
-          )
-
-        }
-      }
-    }
-
-    stage('K8S Deployment - PROD') {
-      steps {
-        parallel(
-          "Deployment": {
-            withKubeConfig([credentialsId: 'k8s-config']) {
-              sh "sed -i 's#replace#${imageName}#g' k8s_PROD-deployment_service.yaml"
-              sh "kubectl -n prod apply -f k8s_PROD-deployment_service.yaml"
-            }
-          },
-          "Rollout Status": {
-            withKubeConfig([credentialsId: 'k8s-config']) {
-              sh "bash k8s-PROD-deployment-rollout-status.sh"
-            }
-          }
-        )
-      }
-    }
-
-    }
-
-    
-    post {
-      always {
-                junit 'target/surefire-reports/*.xml'
-                jacoco execPattern: 'target/jacoco.exec'
-                pitmutation mutationStatsFile: '**/target/pit-reports/**/mutations.xml'
-                dependencyCheckPublisher pattern: 'target/dependency-check-report.xml'
-                publishHTML([allowMissing: false, alwaysLinkToLastBuild: true, keepAll: true, reportDir: 'owasp-zap-report', reportFiles: 'zap_report.html', reportName: 'OWASP_ZAP_HTML report', reportTitles: 'OWASP_ZAP_HTML report'])
-
-      }
-      // success {
-
-      // }
-      // failure {
-
-      // }
-    }
 }

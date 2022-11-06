@@ -82,11 +82,15 @@ jobs:
           k8s-url: ${{ secrets.KUBERNETES_URL }}
           k8s-secret: ${{ secrets.KUBERNETES_SECRET }}
 
+      - name: replace image value
+        working-directory: ./manifests
+        run: |
+          sed -i 's#replace#${{ secrets.DOCKER_HUB_USERNAME }}/numeric-app:${{ github.sha }}#g' k8s_deployment_service.yaml
+
       # deploy
       - uses: Azure/k8s-deploy@v3.1
         with:
           action: deploy
           manifests: |
             manifests/k8s_deployment_service.yaml
-          images: |
-            ${{ secrets.DOCKER_HUB_USERNAME }}/numeric-app:${{ github.sha }}
+          

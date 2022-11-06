@@ -54,6 +54,14 @@ jobs:
         with:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+      - name: set TAG_IMAGE var
+        run: |
+          cat ${{ secrets.DOCKER_HUB_USERNAME }}/numeric-app:${{ github.sha }} > tag.txt
+      - name: upload tag.txt
+        uses: actions/upload-artifact@v3
+        with:
+          name: image_tag
+          path: ./tag.txt 
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
@@ -64,3 +72,31 @@ jobs:
           file: ./Dockerfile
           push: true
           tags: ${{ secrets.DOCKER_HUB_USERNAME }}/numeric-app:${{ github.sha }}
+  
+  deploy_to_dev:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+       
+      # install kubectl
+      - uses: azure/setup-kubectl@v2.0
+
+      - name: Set the Kubernetes context
+        uses: azure/k8s-set-context@v2
+        with:
+          method: service-account
+          k8s-url: ${{ secrets.KUBERNETES_URL }}
+          k8s-secret: ${{ secrets.KUBERNETES_SECRET }}
+      
+      
+      # deploy
+      - uses: Azure/k8s-deploy@v3.1
+        with:
+          action: deploy
+          manifests: |
+              manifests/k8s_deployment_service.yaml
+          images: |
+              ${{ secrets.DOCKER_HUB_USERNAME }}/numeric-app:${{ github.sha }}
+          
+
+        

@@ -93,4 +93,3 @@ jobs:
           action: deploy
           manifests: |
             manifests/k8s_deployment_service.yaml
-          
